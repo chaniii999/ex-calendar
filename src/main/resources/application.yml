@@ -1,0 +1,6 @@
+spring:
+  jackson:
+    time-zone: Asia/Seoul
+  datasource:
+    hikari:
+      connection-init-sql: SET time_zone = '+09:00'
