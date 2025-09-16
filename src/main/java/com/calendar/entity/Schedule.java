@@ -23,7 +23,7 @@ public class Schedule {
     private String title;
 
     @Setter
-    @Column(length = 500, nullable = true)
+    @Column(length = 500)
     private String description;
 
     @Setter
