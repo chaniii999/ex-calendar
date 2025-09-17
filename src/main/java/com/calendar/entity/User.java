@@ -1,10 +1,16 @@
 package com.calendar.entity;
 
+import com.github.f4b6a3.ulid.UlidCreator;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -12,7 +18,7 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 @Builder
 @Getter
-public class User {
+public class User implements UserDetails {
 
     @Id
     @Column(length = 26, nullable = false, updatable = false)
@@ -39,5 +45,41 @@ public class User {
     public void onUpdate() {
         this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
     }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UlidCreator.getUlid().toString();
+        }
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        this.updatedAt = this.createdAt;
+    }
+
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+
+    // 기본 값들은 true로 두고 필요 시 컬럼 추가 가능
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+    @Override
+    public boolean isEnabled() { return true; }
 
 }
