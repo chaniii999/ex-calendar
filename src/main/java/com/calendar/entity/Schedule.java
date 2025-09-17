@@ -33,7 +33,6 @@ public class Schedule {
     @Setter
     private String color;
 
-
     @Setter
     @Column(nullable = false)
     private LocalDate startDate;
