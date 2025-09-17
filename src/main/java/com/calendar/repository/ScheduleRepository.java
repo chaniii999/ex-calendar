@@ -13,5 +13,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, String> {
     // 특정날짜 조회 // n일 조회
     List<Schedule> findByUserAndStartDate(User user, LocalDate startDate);
     // 특정기간 조회 // n일 ~ n일 조회
-    List<Schedule> findByUserAndStartDateBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
+    List<Schedule> findByUserAndStartDateBetween(User user, LocalDate startDate, LocalDate endDate);
 }
