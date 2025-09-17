@@ -3,6 +3,9 @@ package com.calendar.entity;
 import com.github.f4b6a3.ulid.UlidCreator;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,8 +19,8 @@ import java.util.List;
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-@Getter
+@Builder @Getter
+@EntityListeners(AuditingEntityListener.class)
 public class User implements UserDetails {
 
     @Id
@@ -35,26 +38,20 @@ public class User implements UserDetails {
     @Column(length = 20, nullable = false)
     private String nickname;
 
+    @CreatedDate
     @Column(nullable = false)
     private ZonedDateTime createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
 
+    @LastModifiedDate
     @Column(nullable = false)
     private ZonedDateTime updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-    }
 
     @PrePersist
     public void prePersist() {
         if (this.id == null) {
             this.id = UlidCreator.getUlid().toString();
         }
-        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-        this.updatedAt = this.createdAt;
     }
-
 
     @Override
     public String getUsername() {
