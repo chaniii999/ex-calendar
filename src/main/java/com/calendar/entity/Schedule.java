@@ -26,8 +26,13 @@ public class Schedule {
     private String title;
 
     @Setter
-    @Column(length = 500)
+    @Lob
     private String description;
+
+    @Column(length = 7, nullable = false)
+    @Setter
+    private String color;
+
 
     @Setter
     @Column(nullable = false)
