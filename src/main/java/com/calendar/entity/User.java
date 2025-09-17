@@ -40,11 +40,11 @@ public class User implements UserDetails {
 
     @CreatedDate
     @Column(nullable = false)
-    private ZonedDateTime createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+    private ZonedDateTime createdAt;
 
     @LastModifiedDate
     @Column(nullable = false)
-    private ZonedDateTime updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+    private ZonedDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {
