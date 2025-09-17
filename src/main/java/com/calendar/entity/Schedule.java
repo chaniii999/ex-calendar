@@ -1,7 +1,11 @@
 package com.calendar.entity;
 
+import com.github.f4b6a3.ulid.UlidCreator;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,6 +17,7 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder @Getter
+@EntityListeners(AuditingEntityListener.class)
 public class Schedule {
     @Id
     @Column(length = 26, nullable = false, updatable = false)
@@ -50,15 +55,19 @@ public class Schedule {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @CreatedDate
     @Column(nullable = false)
-    private ZonedDateTime createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+    private ZonedDateTime createdAt;
 
+    @LastModifiedDate
     @Column(nullable = false)
-    private ZonedDateTime updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+    private ZonedDateTime updatedAt;
 
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UlidCreator.getUlid().toString();
+        }
     }
 
 }
