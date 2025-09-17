@@ -38,6 +38,10 @@ dependencies {
 
 	// ULID
 	implementation 'com.github.f4b6a3:ulid-creator:5.2.0'
+
+	// MapStruct
+	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 }
 
 tasks.named('test') {
