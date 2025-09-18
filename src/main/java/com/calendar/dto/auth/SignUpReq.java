@@ -1,4 +1,4 @@
-package com.calendar.dto.user;
+package com.calendar.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSignInReq {
-    private String username;
+public class SignUpReq {
+    private String email;
+    private String nickname;
     private String password;
 }

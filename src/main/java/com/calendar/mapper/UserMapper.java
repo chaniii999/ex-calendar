@@ -1,6 +1,6 @@
 package com.calendar.mapper;
 
-import com.calendar.dto.user.UserSignUpReq;
+import com.calendar.dto.auth.SignUpReq;
 import com.calendar.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,5 +16,5 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true) // Service 레벨에서 암호화 후 주입
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User toEntity(UserSignUpReq dto);
+    User toEntity(SignUpReq dto);
 }
