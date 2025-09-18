@@ -1,1 +1,6 @@
-
+spring:
+  profiles:
+    active: local   # 기본 활성화 profile
+    group:
+      local: local
+      prod: prod
