@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 public class ScheduleReq {
     private String title;
     private String description;
+    private String color;
     private String startDate; // "yyyy-MM-dd"
     private String startAt;   // "yyyy-MM-dd'T'HH:mm"
     private String endAt;     // "yyyy-MM-dd'T'HH:mm"
-    private String color;
 
     private boolean alarmEnabled;
 
