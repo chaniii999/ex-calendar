@@ -6,7 +6,6 @@ import com.calendar.dto.auth.TokenReq;
 import com.calendar.entity.User;
 import com.calendar.repository.UserRepository;
 import com.calendar.service.AuthService;
-import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
