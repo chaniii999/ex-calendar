@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "schedules")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder @Getter
+@Getter
 @EntityListeners(AuditingEntityListener.class)
 public class Schedule {
     @Id
