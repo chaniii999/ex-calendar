@@ -1,10 +1,15 @@
 package com.calendar.dto.auth;
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class TokenReq {
-    private String email;
-    private  String refreshToken;
+	@Email
+	@NotBlank
+	private String email;
+
+	@NotBlank
+	private String refreshToken;
 }
