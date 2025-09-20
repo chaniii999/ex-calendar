@@ -44,12 +44,10 @@ public class Schedule {
     private LocalDateTime endAt;
 
     @Setter
-    @Builder.Default
     @Column(nullable = false)
     private boolean allDay = false;
 
     @Setter
-    @Builder.Default
     @Column(nullable = false)
     private boolean alarmEnabled = false;
 

@@ -16,5 +16,6 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true) // Service 레벨에서 암호화 후 주입
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
     User toEntity(SignUpReq dto);
 }
