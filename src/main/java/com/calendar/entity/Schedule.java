@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Schedule {
     @Id
@@ -45,10 +46,12 @@ public class Schedule {
 
     @Setter
     @Column(nullable = false)
+    @Builder.Default
     private boolean allDay = false;
 
     @Setter
     @Column(nullable = false)
+    @Builder.Default
     private boolean alarmEnabled = false;
 
     @Setter

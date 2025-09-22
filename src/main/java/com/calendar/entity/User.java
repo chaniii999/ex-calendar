@@ -19,6 +19,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class User implements UserDetails {
 
