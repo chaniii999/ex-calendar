@@ -32,7 +32,7 @@ class AuthControllerTest {
         userRepository.deleteAll();
         User user = User.builder()
                 .email("test@test.com")
-                .password(passwordEncoder.encode("1234"))
+                .password(passwordEncoder.encode("password123"))
                 .nickname("tester")
                 .build();
         userRepository.save(user);
@@ -42,21 +42,22 @@ class AuthControllerTest {
     void 로그인_성공() throws Exception {
         LoginReq req = new LoginReq();
         req.setEmail("test@test.com");
-        req.setPassword("1234");
+        req.setPassword("password123");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
     }
 
     @Test
     void 로그인_실패_잘못된비밀번호() throws Exception {
         LoginReq req = new LoginReq();
         req.setEmail("test@test.com");
-        req.setPassword("wrong");
+        req.setPassword("wrongpass");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,6 +86,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Logged out successfully"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Logged out successfully"));
     }
 }
