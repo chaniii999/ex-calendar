@@ -3,6 +3,7 @@ package com.calendar.controller;
 import com.calendar.dto.ApiResponse;
 import com.calendar.dto.auth.LoginReq;
 import com.calendar.dto.auth.LogoutReq;
+import com.calendar.dto.auth.SignUpReq;
 import com.calendar.dto.auth.TokenReq;
 import com.calendar.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,12 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@Valid @RequestBody SignUpReq request) {
+        authService.signup(request);
+        return ResponseEntity.ok(ApiResponse.of(true, "User registered successfully", null));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginReq request) {
