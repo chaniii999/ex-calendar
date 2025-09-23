@@ -1,9 +1,14 @@
 package com.calendar.service;
 
+import com.calendar.dto.auth.SignUpReq;
 import com.calendar.dto.auth.TokenRes;
+import com.calendar.mapper.UserMapper;
 import com.calendar.repository.RefreshTokenRepository;
 import com.calendar.repository.UserRepository;
 import com.calendar.entity.User;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     /**
      * 로그인 처리: 이메일, 패스워드 검증 후 Access/Refresh 토큰 발급
@@ -56,5 +62,15 @@ public class AuthService {
      */
     public void logout(String email) {
         refreshTokenRepository.delete(email);
+    }
+
+    public void signup(SignUpReq req) {
+        if (userRepository.existsByEmail(req.getEmail())) {
+            throw new RuntimeException("Email already in use");
+        }
+
+        User user = userMapper.toEntity(req);
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
+        userRepository.save(user);
     }
 }
