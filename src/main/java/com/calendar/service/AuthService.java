@@ -2,6 +2,8 @@ package com.calendar.service;
 
 import com.calendar.dto.auth.SignUpReq;
 import com.calendar.dto.auth.TokenRes;
+import com.calendar.exception.AuthenticationFailedException;
+import com.calendar.exception.ConflictException;
 import com.calendar.mapper.UserMapper;
 import com.calendar.repository.RefreshTokenRepository;
 import com.calendar.repository.UserRepository;
@@ -25,10 +27,10 @@ public class AuthService {
      */
     public TokenRes login(String email, String rawPassword) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new AuthenticationFailedException("Invalid credentials");
         }
 
         String accessToken = jwtProvider.createAccessToken(email);
@@ -46,7 +48,7 @@ public class AuthService {
     public TokenRes reissue(String refreshToken) {
         // 1) 토큰 유효성/서명/만료 검증
         if (!jwtProvider.isTokenValid(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new AuthenticationFailedException("Invalid refresh token");
         }
 
         // 2) 토큰 subject(email) 추출
@@ -55,7 +57,7 @@ public class AuthService {
         // 3) 저장소의 토큰과 일치 여부 확인 (도난/재사용 방지)
         String savedToken = refreshTokenRepository.findByKey(email);
         if (savedToken == null || !savedToken.equals(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new AuthenticationFailedException("Invalid refresh token");
         }
 
         // 4) AccessToken 재발급 + RefreshToken 회전
@@ -77,7 +79,7 @@ public class AuthService {
 
     public void signup(SignUpReq req) {
         if (userRepository.existsByEmail(req.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new ConflictException("Email already in use");
         }
 
         User user = userMapper.toEntity(req);
