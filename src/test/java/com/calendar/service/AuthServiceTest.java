@@ -66,21 +66,29 @@ class AuthServiceTest {
 
     @Test
     void 재발급_성공() {
+        when(jwtProvider.isTokenValid("refresh-token")).thenReturn(true);
+        when(jwtProvider.getSubject("refresh-token")).thenReturn("test@test.com");
         when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("refresh-token");
         when(jwtProvider.createAccessToken("test@test.com")).thenReturn("new-access");
+        when(jwtProvider.createRefreshToken("test@test.com")).thenReturn("new-refresh");
+        when(jwtProvider.getRefreshTokenExpiration()).thenReturn(1000L);
 
-        var response = authService.reissue("test@test.com", "refresh-token");
+        var response = authService.reissue("refresh-token");
 
         assertEquals("new-access", response.getAccessToken());
-        assertEquals("refresh-token", response.getRefreshToken());
+        assertEquals("new-refresh", response.getRefreshToken());
+        verify(refreshTokenRepository, times(1))
+                .save(eq("test@test.com"), eq("new-refresh"), anyLong());
     }
 
     @Test
     void 재발급_실패_리프레시토큰불일치() {
+        when(jwtProvider.isTokenValid("wrong-token")).thenReturn(true);
+        when(jwtProvider.getSubject("wrong-token")).thenReturn("test@test.com");
         when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("other-token");
 
         assertThrows(RuntimeException.class,
-                () -> authService.reissue("test@test.com", "wrong-token"));
+                () -> authService.reissue("wrong-token"));
     }
 
     @Test
