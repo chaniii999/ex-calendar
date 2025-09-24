@@ -1,7 +1,6 @@
 package com.calendar.controller;
 
 import com.calendar.dto.auth.LoginReq;
-import com.calendar.dto.auth.LogoutReq;
 import com.calendar.dto.auth.TokenReq;
 import com.calendar.entity.User;
 import com.calendar.repository.UserRepository;
@@ -16,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -68,7 +68,6 @@ class AuthControllerTest {
     @Test
     void 재발급_실패_없는토큰() throws Exception {
         TokenReq req = new TokenReq();
-        req.setEmail("test@test.com");
         req.setRefreshToken("invalid-token");
 
         mockMvc.perform(post("/api/auth/reissue")
@@ -79,12 +78,8 @@ class AuthControllerTest {
 
     @Test
     void 로그아웃_성공() throws Exception {
-        LogoutReq req = new LogoutReq();
-        req.setEmail("test@test.com");
-
         mockMvc.perform(post("/api/auth/logout")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
+                        .with(user("test@test.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Logged out successfully"));
