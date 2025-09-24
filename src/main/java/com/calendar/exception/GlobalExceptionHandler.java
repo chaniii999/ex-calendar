@@ -41,6 +41,24 @@ public class GlobalExceptionHandler {
                 .data(null)
                 .build());
     }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuth(AuthenticationFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.<Void>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .data(null)
+                .build());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.<Void>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .data(null)
+                .build());
+    }
 }
 
 
