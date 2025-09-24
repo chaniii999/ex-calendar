@@ -9,6 +9,7 @@ import com.calendar.repository.RefreshTokenRepository;
 import com.calendar.repository.UserRepository;
 import com.calendar.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AuthService {
 
     private final JwtProvider jwtProvider;
@@ -29,10 +31,12 @@ public class AuthService {
      */
     @Transactional
     public TokenRes login(String email, String rawPassword) {
+        log.info("auth.login.attempt email={}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            log.warn("auth.login.failed.invalid_password email={}", email);
             throw new AuthenticationFailedException("Invalid credentials");
         }
 
@@ -41,6 +45,7 @@ public class AuthService {
 
         // Redis에 Refresh Token 해시 저장
         refreshTokenRepository.save(email, sha256Hex(refreshToken), jwtProvider.getRefreshTokenExpiration());
+        log.info("auth.login.success email={}", email);
 
         return new TokenRes(accessToken, refreshToken);
     }
@@ -50,8 +55,10 @@ public class AuthService {
      */
     @Transactional
     public TokenRes reissue(String refreshToken) {
+        log.info("auth.reissue.attempt");
         // 1) 토큰 유효성/서명/만료 검증
         if (!jwtProvider.isTokenValid(refreshToken)) {
+            log.warn("auth.reissue.failed.invalid_token.reason=jwt_invalid");
             throw new AuthenticationFailedException("Invalid refresh token");
         }
 
@@ -62,6 +69,7 @@ public class AuthService {
         String savedTokenHash = refreshTokenRepository.findByKey(email);
         String providedTokenHash = sha256Hex(refreshToken);
         if (savedTokenHash == null || !savedTokenHash.equals(providedTokenHash)) {
+            log.warn("auth.reissue.failed.invalid_token.reason=hash_mismatch email={}", email);
             throw new AuthenticationFailedException("Invalid refresh token");
         }
 
@@ -71,6 +79,7 @@ public class AuthService {
 
         // 5) 저장소 갱신 (회전 적용: 기존 토큰 치환) - 해시 저장
         refreshTokenRepository.save(email, sha256Hex(newRefreshToken), jwtProvider.getRefreshTokenExpiration());
+        log.info("auth.reissue.success email={}", email);
 
         return new TokenRes(newAccessToken, newRefreshToken);
     }
@@ -81,17 +90,21 @@ public class AuthService {
     @Transactional
     public void logout(String email) {
         refreshTokenRepository.delete(email);
+        log.info("auth.logout.success email={}", email);
     }
 
     @Transactional
     public void signup(SignUpReq req) {
+        log.info("auth.signup.attempt email={}", req.getEmail());
         if (userRepository.existsByEmail(req.getEmail())) {
+            log.warn("auth.signup.failed.email_conflict email={}", req.getEmail());
             throw new ConflictException("Email already in use");
         }
 
         User user = userMapper.toEntity(req);
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         userRepository.save(user);
+        log.info("auth.signup.success email={}", user.getEmail());
     }
 
     private String sha256Hex(String value) {

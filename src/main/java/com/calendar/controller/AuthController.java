@@ -4,6 +4,7 @@ import com.calendar.dto.ApiResponse;
 import com.calendar.dto.auth.*;
 import com.calendar.service.AuthService;
 import com.calendar.util.CookieUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,7 +45,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication,
-                                                    jakarta.servlet.http.HttpServletResponse response) {
+                                                    HttpServletResponse response) {
         authService.logout(authentication.getName());
         cookieUtils.clearRefreshCookie(response);
         return ResponseEntity.ok(ApiResponse.of(true, "Logged out successfully", null));
