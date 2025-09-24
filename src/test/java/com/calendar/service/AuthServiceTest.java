@@ -52,7 +52,7 @@ class AuthServiceTest {
         assertEquals("access-token", response.getAccessToken());
         assertEquals("refresh-token", response.getRefreshToken());
         verify(refreshTokenRepository, times(1))
-                .save(eq("test@test.com"), eq("refresh-token"), anyLong());
+                .save(eq("test@test.com"), anyString(), anyLong());
     }
 
     @Test
@@ -68,7 +68,7 @@ class AuthServiceTest {
     void 재발급_성공() {
         when(jwtProvider.isTokenValid("refresh-token")).thenReturn(true);
         when(jwtProvider.getSubject("refresh-token")).thenReturn("test@test.com");
-        when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("refresh-token");
+        when(refreshTokenRepository.findByKey("test@test.com")).thenReturn(sha256Hex("refresh-token"));
         when(jwtProvider.createAccessToken("test@test.com")).thenReturn("new-access");
         when(jwtProvider.createRefreshToken("test@test.com")).thenReturn("new-refresh");
         when(jwtProvider.getRefreshTokenExpiration()).thenReturn(1000L);
@@ -78,14 +78,14 @@ class AuthServiceTest {
         assertEquals("new-access", response.getAccessToken());
         assertEquals("new-refresh", response.getRefreshToken());
         verify(refreshTokenRepository, times(1))
-                .save(eq("test@test.com"), eq("new-refresh"), anyLong());
+                .save(eq("test@test.com"), anyString(), anyLong());
     }
 
     @Test
     void 재발급_실패_리프레시토큰불일치() {
         when(jwtProvider.isTokenValid("wrong-token")).thenReturn(true);
         when(jwtProvider.getSubject("wrong-token")).thenReturn("test@test.com");
-        when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("other-token");
+        when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("some-other-hash");
 
         assertThrows(RuntimeException.class,
                 () -> authService.reissue("wrong-token"));
@@ -96,5 +96,19 @@ class AuthServiceTest {
         authService.logout("test@test.com");
 
         verify(refreshTokenRepository, times(1)).delete("test@test.com");
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
