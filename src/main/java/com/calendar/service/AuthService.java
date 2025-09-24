@@ -10,10 +10,12 @@ import com.calendar.repository.UserRepository;
 import com.calendar.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final JwtProvider jwtProvider;
@@ -25,6 +27,7 @@ public class AuthService {
     /**
      * 로그인 처리: 이메일, 패스워드 검증 후 Access/Refresh 토큰 발급
      */
+    @Transactional
     public TokenRes login(String email, String rawPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
@@ -36,8 +39,8 @@ public class AuthService {
         String accessToken = jwtProvider.createAccessToken(email);
         String refreshToken = jwtProvider.createRefreshToken(email);
 
-        // Redis에 Refresh Token 저장
-        refreshTokenRepository.save(email, refreshToken, jwtProvider.getRefreshTokenExpiration());
+        // Redis에 Refresh Token 해시 저장
+        refreshTokenRepository.save(email, sha256Hex(refreshToken), jwtProvider.getRefreshTokenExpiration());
 
         return new TokenRes(accessToken, refreshToken);
     }
@@ -45,6 +48,7 @@ public class AuthService {
     /**
      * RefreshToken 검증 + 회전 후 AccessToken 재발급
      */
+    @Transactional
     public TokenRes reissue(String refreshToken) {
         // 1) 토큰 유효성/서명/만료 검증
         if (!jwtProvider.isTokenValid(refreshToken)) {
@@ -54,9 +58,10 @@ public class AuthService {
         // 2) 토큰 subject(email) 추출
         String email = jwtProvider.getSubject(refreshToken);
 
-        // 3) 저장소의 토큰과 일치 여부 확인 (도난/재사용 방지)
-        String savedToken = refreshTokenRepository.findByKey(email);
-        if (savedToken == null || !savedToken.equals(refreshToken)) {
+        // 3) 저장소의 토큰 해시와 일치 여부 확인 (도난/재사용 방지)
+        String savedTokenHash = refreshTokenRepository.findByKey(email);
+        String providedTokenHash = sha256Hex(refreshToken);
+        if (savedTokenHash == null || !savedTokenHash.equals(providedTokenHash)) {
             throw new AuthenticationFailedException("Invalid refresh token");
         }
 
@@ -64,8 +69,8 @@ public class AuthService {
         String newAccessToken = jwtProvider.createAccessToken(email);
         String newRefreshToken = jwtProvider.createRefreshToken(email);
 
-        // 5) 저장소 갱신 (회전 적용: 기존 토큰 치환)
-        refreshTokenRepository.save(email, newRefreshToken, jwtProvider.getRefreshTokenExpiration());
+        // 5) 저장소 갱신 (회전 적용: 기존 토큰 치환) - 해시 저장
+        refreshTokenRepository.save(email, sha256Hex(newRefreshToken), jwtProvider.getRefreshTokenExpiration());
 
         return new TokenRes(newAccessToken, newRefreshToken);
     }
@@ -73,10 +78,12 @@ public class AuthService {
     /**
      * 로그아웃 처리 (Redis에서 RefreshToken 삭제)
      */
+    @Transactional
     public void logout(String email) {
         refreshTokenRepository.delete(email);
     }
 
+    @Transactional
     public void signup(SignUpReq req) {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new ConflictException("Email already in use");
@@ -85,5 +92,19 @@ public class AuthService {
         User user = userMapper.toEntity(req);
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         userRepository.save(user);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to hash refresh token", e);
+        }
     }
 }
