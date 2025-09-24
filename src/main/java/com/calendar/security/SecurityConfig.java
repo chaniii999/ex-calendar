@@ -61,16 +61,18 @@ public class SecurityConfig {
 						.authenticationEntryPoint(restAuthenticationEntryPoint)
 						.accessDeniedHandler(restAccessDeniedHandler)
 				)
-				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(
-								"/api/auth/**",
-								"/actuator/health",
-								"/v3/api-docs/**",
-								"/swagger-ui/**",
-								"/swagger-resources/**"
-						).permitAll()
-						.anyRequest().authenticated()
-				)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/signup",
+                                "/api/auth/login",
+                                "/api/auth/reissue",
+                                "/actuator/health",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-resources/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
