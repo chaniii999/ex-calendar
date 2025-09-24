@@ -6,9 +6,6 @@ import com.calendar.mapper.UserMapper;
 import com.calendar.repository.RefreshTokenRepository;
 import com.calendar.repository.UserRepository;
 import com.calendar.entity.User;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,17 +41,31 @@ public class AuthService {
     }
 
     /**
-     * RefreshToken 검증 후 AccessToken 재발급
+     * RefreshToken 검증 + 회전 후 AccessToken 재발급
      */
-    public TokenRes reissue(String email, String refreshToken) {
-        String savedToken = refreshTokenRepository.findByKey(email);
+    public TokenRes reissue(String refreshToken) {
+        // 1) 토큰 유효성/서명/만료 검증
+        if (!jwtProvider.isTokenValid(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
 
+        // 2) 토큰 subject(email) 추출
+        String email = jwtProvider.getSubject(refreshToken);
+
+        // 3) 저장소의 토큰과 일치 여부 확인 (도난/재사용 방지)
+        String savedToken = refreshTokenRepository.findByKey(email);
         if (savedToken == null || !savedToken.equals(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
 
+        // 4) AccessToken 재발급 + RefreshToken 회전
         String newAccessToken = jwtProvider.createAccessToken(email);
-        return new TokenRes(newAccessToken, refreshToken);
+        String newRefreshToken = jwtProvider.createRefreshToken(email);
+
+        // 5) 저장소 갱신 (회전 적용: 기존 토큰 치환)
+        refreshTokenRepository.save(email, newRefreshToken, jwtProvider.getRefreshTokenExpiration());
+
+        return new TokenRes(newAccessToken, newRefreshToken);
     }
 
     /**
