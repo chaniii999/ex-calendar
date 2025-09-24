@@ -1,5 +1,7 @@
 package com.calendar.service;
 
+import com.calendar.exception.AuthenticationFailedException;
+
 import com.calendar.entity.User;
 import com.calendar.repository.RefreshTokenRepository;
 import com.calendar.repository.UserRepository;
@@ -60,7 +62,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded1234")).thenReturn(false);
 
-        assertThrows(RuntimeException.class,
+        assertThrows(AuthenticationFailedException.class,
                 () -> authService.login("test@test.com", "wrong"));
     }
 
@@ -87,7 +89,7 @@ class AuthServiceTest {
         when(jwtProvider.getSubject("wrong-token")).thenReturn("test@test.com");
         when(refreshTokenRepository.findByKey("test@test.com")).thenReturn("some-other-hash");
 
-        assertThrows(RuntimeException.class,
+        assertThrows(AuthenticationFailedException.class,
                 () -> authService.reissue("wrong-token"));
     }
 

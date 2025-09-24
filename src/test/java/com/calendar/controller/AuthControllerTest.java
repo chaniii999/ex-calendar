@@ -61,14 +61,20 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void 재발급_실패_없는토큰() throws Exception {
         mockMvc.perform(post("/api/auth/reissue")
                         .cookie(new jakarta.servlet.http.Cookie("REFRESH_TOKEN", "invalid-token")))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 로그아웃_실패_무인증() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
