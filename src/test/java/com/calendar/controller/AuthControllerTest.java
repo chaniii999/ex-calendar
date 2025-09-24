@@ -1,7 +1,6 @@
 package com.calendar.controller;
 
 import com.calendar.dto.auth.LoginReq;
-import com.calendar.dto.auth.TokenReq;
 import com.calendar.entity.User;
 import com.calendar.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,12 +66,8 @@ class AuthControllerTest {
 
     @Test
     void 재발급_실패_없는토큰() throws Exception {
-        TokenReq req = new TokenReq();
-        req.setRefreshToken("invalid-token");
-
         mockMvc.perform(post("/api/auth/reissue")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
+                        .cookie(new jakarta.servlet.http.Cookie("REFRESH_TOKEN", "invalid-token")))
                 .andExpect(status().is4xxClientError());
     }
 

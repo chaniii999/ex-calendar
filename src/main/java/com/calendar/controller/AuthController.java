@@ -3,6 +3,7 @@ package com.calendar.controller;
 import com.calendar.dto.ApiResponse;
 import com.calendar.dto.auth.*;
 import com.calendar.service.AuthService;
+import com.calendar.util.CookieUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final CookieUtils cookieUtils;
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignUpReq request) {
@@ -32,13 +34,19 @@ public class AuthController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<ApiResponse<TokenRes>> reissue(@Valid @RequestBody TokenReq request) {
-        return ResponseEntity.ok(ApiResponse.of(true, "ok", authService.reissue(request.getRefreshToken())));
+    public ResponseEntity<ApiResponse<TokenRes>> reissue(jakarta.servlet.http.HttpServletRequest request,
+                                                         jakarta.servlet.http.HttpServletResponse response) {
+        String refreshToken = cookieUtils.resolveRefreshToken(request);
+        TokenRes tokens = authService.reissue(refreshToken);
+        cookieUtils.writeRefreshCookie(response, tokens.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.of(true, "ok", tokens));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication,
+                                                    jakarta.servlet.http.HttpServletResponse response) {
         authService.logout(authentication.getName());
+        cookieUtils.clearRefreshCookie(response);
         return ResponseEntity.ok(ApiResponse.of(true, "Logged out successfully", null));
     }
 }
